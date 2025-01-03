@@ -1,0 +1,73 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "FPSGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Name = "FPSFrame"
+frame.Size = UDim2.new(0, 150, 0, 30)
+frame.Position = UDim2.new(0.5, -75, 0.1, 0)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.7
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+
+local fpsLabel = Instance.new("TextLabel")
+fpsLabel.Name = "FPSLabel"
+fpsLabel.Size = UDim2.new(1, 0, 1, 0)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.TextColor3 = Color3.new(1, 1, 1)
+fpsLabel.TextScaled = true
+fpsLabel.Font = Enum.Font.SourceSansBold
+fpsLabel.Text = "FPS: 0.00"
+fpsLabel.Parent = frame
+
+local closeButton = Instance.new("ImageButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Position = UDim2.new(1, -25, 0.5, -10)
+closeButton.Image = "rbxassetid://6031094678"
+closeButton.BackgroundTransparency = 1
+closeButton.Parent = frame
+
+local lastUpdateTime = tick()
+local frameCount = 0
+game:GetService("RunService").RenderStepped:Connect(function()
+    frameCount += 1
+    if tick() - lastUpdateTime >= 1 then
+        fpsLabel.Text = string.format("FPS: %.2f", frameCount / (tick() - lastUpdateTime))
+        frameCount = 0
+        lastUpdateTime = tick()
+    end
+end)
+
+local dragging = false
+local dragOffset = Vector2.new()
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        local mousePosition = UserInputService:GetMouseLocation()
+        dragOffset = Vector2.new(mousePosition.X, mousePosition.Y) - Vector2.new(frame.AbsolutePosition.X, frame.AbsolutePosition.Y)
+    end
+end)
+
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local mousePosition = UserInputService:GetMouseLocation()
+        frame.Position = UDim2.new(0, mousePosition.X - dragOffset.X, 0, mousePosition.Y - dragOffset.Y)
+    end
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
